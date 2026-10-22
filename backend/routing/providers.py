@@ -73,7 +73,7 @@ def geocode(query):
 
 def routes(origin,destination):
     coordinates = ";".join(",".join(str(v) for v in point) for point in [origin,destination])
-    data = get_json(f"{settings.OSRM_URL}/route/v1/driving/{coordinates}",{"alternatives":"3","overview":"full","geometries":"geojson","annotations":"distance,duration","steps":"false"},"osrm")
+    data = get_json(f"{settings.OSRM_URL}/route/v1/driving/{coordinates}",{"alternatives":"true","overview":"full","geometries":"geojson","annotations":"distance,duration","steps":"false"},"osrm")
     if data.get("code") != "Ok":
         raise ProviderError("No road route found between these locations.")
     result,seen = [],set()
