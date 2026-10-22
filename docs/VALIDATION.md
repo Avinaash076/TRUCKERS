@@ -20,3 +20,13 @@
 - Loom recording remains to be performed by the user with the supplied script.
 - Production URL/CORS/cold-start behavior must be checked after Render account authorization.
 - Evidence JSON and screenshots are local in ignored output/; live weather changes over time.
+
+
+## Production weather investigation
+- Verified https://truckers-api-1keh.onrender.com/api/v1/health/ returns HTTP 200.
+- Verified https://truckers-web.onrender.com returns HTTP 200 and its JS build contains the correct backend URL.
+- Verified CORS preflight returns the exact frontend origin.
+- Reproduced production corridor HTTP 502 with JSON weather-provider error; identical 25-location retrieval succeeded locally.
+- Added explicit upstream HTTP statuses/timeouts without leaking URLs or secrets, and reduced corridor weather from 16 to 3 calendar days while retaining all 49 slider frames.
+- Expanded backend suite: 27 tests passed.
+- A likely shared-host provider limit must be confirmed from the new deployed status; a 502 alone does not establish HTTP 429.

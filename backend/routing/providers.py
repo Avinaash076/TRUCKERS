@@ -1,8 +1,11 @@
 import hashlib,json,threading,time
+import logging
 from math import isfinite
 import httpx
 from django.conf import settings
 from django.core.cache import cache
+
+logger = logging.getLogger(__name__)
 
 class ProviderError(Exception):
     pass
@@ -25,8 +28,24 @@ def get_json(url,params,kind="weather",ttl=600):
             response = httpx.get(url,params=params,timeout=35,headers={"User-Agent":settings.PROVIDER_USER_AGENT})
         response.raise_for_status()
         result = response.json()
-    except (httpx.HTTPError,ValueError) as exc:
-        raise ProviderError(f"{kind} provider unavailable. Please retry shortly.") from exc
+    except httpx.HTTPStatusError as exc:
+        status = exc.response.status_code
+        logger.warning("%s provider returned HTTP %s", kind, status)
+        if status == 429:
+            message = f"{kind.capitalize()} provider rate limit reached (HTTP 429). Shared hosting IPs may share the provider quota. Wait for the quota to reset or configure dedicated provider access."
+        elif status in (401, 403):
+            message = f"{kind.capitalize()} provider denied access (HTTP {status}). Check the provider endpoint and access configuration."
+        elif status == 400:
+            message = f"{kind.capitalize()} provider rejected the request (HTTP 400). Check the provider endpoint and forecast parameters."
+        else:
+            message = f"{kind.capitalize()} provider unavailable (HTTP {status}). Please retry later."
+        raise ProviderError(message) from exc
+    except httpx.TimeoutException as exc:
+        logger.warning("%s provider request timed out", kind)
+        raise ProviderError(f"{kind.capitalize()} provider timed out. Please retry later.") from exc
+    except (httpx.HTTPError, ValueError) as exc:
+        logger.warning("%s provider connection or response failed (%s)", kind, type(exc).__name__)
+        raise ProviderError(f"{kind.capitalize()} provider connection or response failed. Please retry later.") from exc
     cache.set(key,result,ttl)
     return result
 

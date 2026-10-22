@@ -151,3 +151,45 @@ class EndpointTests(SimpleTestCase):
     def test_invalid_corridor_and_geocode(self):
         self.assertEqual(self.client.get("/api/v1/geocode/?q=x").status_code,400)
         self.assertEqual(self.client.post("/api/v1/corridor/",{"geometries":[],"load_lb":1},format="json").status_code,400)
+
+
+class ProviderFailureTests(SimpleTestCase):
+    @patch("routing.providers.httpx.get")
+    def test_rate_limit_is_identified_without_leaking_url(self, mock):
+        import httpx
+        from django.core.cache import cache
+        from routing.providers import get_json
+        cache.clear()
+        request = httpx.Request("GET", "https://example.test/weather?apikey=secret")
+        mock.return_value = httpx.Response(429, request=request)
+        with self.assertRaisesMessage(ProviderError, "HTTP 429") as caught:
+            get_json("https://example.test/weather", {"apikey": "secret"})
+        self.assertNotIn("secret", str(caught.exception))
+        self.assertEqual(mock.call_count, 1)
+
+    @patch("routing.providers.httpx.get")
+    def test_access_denied_has_actionable_status(self, mock):
+        import httpx
+        from django.core.cache import cache
+        from routing.providers import get_json
+        cache.clear()
+        mock.return_value = httpx.Response(403, request=httpx.Request("GET", "https://example.test/weather"))
+        with self.assertRaisesMessage(ProviderError, "denied access (HTTP 403)"):
+            get_json("https://example.test/weather", {})
+
+    @patch("routing.providers.httpx.get")
+    def test_timeout_is_distinct(self, mock):
+        import httpx
+        from routing.providers import get_json
+        mock.side_effect = httpx.ReadTimeout("timeout")
+        with self.assertRaisesMessage(ProviderError, "timed out"):
+            get_json("https://example.test/timeout", {})
+
+    @patch("routing.views.weather.fetch")
+    def test_corridor_requests_only_three_days(self, mock):
+        mock.return_value = {}
+        response = APIClient().post("/api/v1/corridor/", {"geometries": [[[0,0],[.1,.1]]], "load_lb": 30000}, format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(mock.call_args.kwargs["forecast_days"], 3)
+        self.assertEqual(len(response.data["samples"][0]["hours"]), 49)
+        self.assertTrue(all(h is None for h in response.data["samples"][0]["hours"]))

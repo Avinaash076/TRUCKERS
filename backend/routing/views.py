@@ -106,7 +106,7 @@ def corridor(request):
     points,radius = grid(data["geometries"])
     anchor = datetime.now(timezone.utc).replace(minute=0,second=0,microsecond=0)
     try:
-        series = weather.fetch(points)
+        series = weather.fetch(points, forecast_days=3)
         samples = []
         for point in points:
             hours = []

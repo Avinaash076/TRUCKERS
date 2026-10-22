@@ -4,12 +4,12 @@ from datetime import datetime,timezone
 from django.conf import settings
 from .providers import get_json,ProviderError
 
-def _fetch(points):
+def _fetch(points, forecast_days):
     unique = list(dict.fromkeys(tuple(round(v,4) for v in p) for p in points))
     result = {}
     for start in range(0,len(unique),30):
         batch = unique[start:start+30]
-        data = get_json(settings.WEATHER_URL,{"latitude":",".join(str(p[1]) for p in batch),"longitude":",".join(str(p[0]) for p in batch),"hourly":"wind_speed_10m,rain,showers,snowfall","wind_speed_unit":"mph","precipitation_unit":"mm","timezone":"GMT","forecast_days":16})
+        data = get_json(settings.WEATHER_URL,{"latitude":",".join(str(p[1]) for p in batch),"longitude":",".join(str(p[0]) for p in batch),"hourly":"wind_speed_10m,rain,showers,snowfall","wind_speed_unit":"mph","precipitation_unit":"mm","timezone":"GMT","forecast_days":forecast_days})
         rows = data if isinstance(data,list) else [data]
         if len(rows) != len(batch):
             raise ProviderError("Weather provider returned incomplete location data.")
@@ -24,9 +24,9 @@ def _fetch(points):
             result[point] = hourly
     return result
 
-def fetch(points):
+def fetch(points, forecast_days=16):
     try:
-        return _fetch(points)
+        return _fetch(points, forecast_days)
     except (KeyError,TypeError,ValueError,IndexError) as exc:
         raise ProviderError("Weather provider returned malformed forecast data.") from exc
 

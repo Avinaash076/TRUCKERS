@@ -90,4 +90,13 @@ The repository includes a two-service render.yaml: Django/Gunicorn web service a
 The API uses one Gunicorn worker with four threads and a 240-second timeout to allow bounded weather batches. This preserves public-provider rate limiting within one service instance. Persistent trips and multi-instance scaling would require shared storage/rate limiting.
 
 ## Submission
-Use docs/WALKTHROUGH.md for the 5–10 minute Loom recording. Include repository URL, hosted URL, Loom URL and the provider limitation about alternative count. GitHub publication, Render deployment and recording were not possible without authenticated account access; no public URL is claimed.
+Use docs/WALKTHROUGH.md for the 5–10 minute Loom recording. Include repository URL, hosted URL, Loom URL and the provider limitation about alternative count. GitHub repository: https://github.com/Avinaash076/TRUCKERS. Deployed frontend: https://truckers-web.onrender.com. Deployed backend: https://truckers-api-1keh.onrender.com. Health, frontend asset configuration and CORS have been verified; production weather retrieval is being diagnosed separately. Loom recording remains a user deliverable.
+
+
+## Weather errors on hosted deployments
+A 502 response from /api/v1/corridor/ can mean the backend received an error from the weather provider. Check its JSON error message, rather than changing the frontend API URL or CORS without evidence.
+- HTTP 429: provider quota/rate limit. Open-Meteo documents shared-IP limits for Render: https://open-meteo.com/en/terms. Wait for reset or arrange dedicated provider access; restarting your app does not guarantee a new quota.
+- HTTP 401/403: check provider access and WEATHER_URL.
+- HTTP 400: check provider endpoint and forecast parameters.
+- Timeout/connection failures: retry later and inspect Render logs.
+The backend logs provider names and statuses without request URLs or secrets. Corridor forecasts request three calendar days, which cover the current forecast hour through +48h. Trip ETA weather retains the 16-day request and actual-horizon checks.
