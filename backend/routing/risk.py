@@ -29,3 +29,10 @@ def recommend(routes):
     for rank, route in enumerate(eligible,1):
         route["rank"] = rank
     return eligible[0]["id"] if eligible else None
+
+
+def from_weather(weather, load):
+    risk = classify(weather["wind_mph"], weather["rain_in_hr"], weather["snow_in_hr"], load)
+    if weather.get("rain_basis") == "total_precipitation":
+        risk["reasons"] = [reason.replace("Rain:", "Total precipitation (rain rule):") for reason in risk["reasons"]]
+    return risk

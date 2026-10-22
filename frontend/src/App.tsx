@@ -64,6 +64,6 @@ export default function App(){
      </div>
     </div>
    </section>
-  </main><footer className="bottom-bar"><span>Built for better-informed journeys.</span><span>Routing: OSRM · Weather: Open-Meteo · Geocoding: OpenStreetMap <ArrowUpRight size={12}/></span></footer>
+  </main><footer className="bottom-bar"><span>Built for better-informed journeys.</span><span>Routing: OSRM · Weather: {data?.weather_provider?<a href={data.weather_provider.url}>{data.weather_provider.name}</a>:"forecasts"} · Geocoding: OpenStreetMap <ArrowUpRight size={12}/></span></footer>
  </div>
 }

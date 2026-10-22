@@ -30,3 +30,13 @@
 - Added explicit upstream HTTP statuses/timeouts without leaking URLs or secrets, and reduced corridor weather from 16 to 3 calendar days while retaining all 49 slider frames.
 - Expanded backend suite: 27 tests passed.
 - A likely shared-host provider limit must be confirmed from the new deployed status; a 502 alone does not establish HTTP 429.
+
+
+## WeatherAPI integration
+- Added key-based provider selection and WeatherAPI hourly forecast normalization using epoch timestamps and real coverage limits.
+- Backend: 41 test methods passed, including 14 WeatherAPI-specific tests for coordinates, units, period boundaries, missing snow, timestamp gaps, caching, quota/auth errors, key redaction and metadata.
+- Frontend: four tests passed; provider attribution is verified by a frontend assertion.
+- Live verification with a real WeatherAPI account remains pending the user setting WEATHERAPI_KEY on Render.
+- Precipitation interpretation is explicit: WeatherAPI total precipitation is a conservative bound for the rain rule; it is not presented as separately measured liquid rainfall.
+
+- Production frontend build and recorded-data Edge browser workflow passed after the WeatherAPI integration; real-key verification is still pending Render configuration.

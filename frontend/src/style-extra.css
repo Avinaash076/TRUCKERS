@@ -9,3 +9,5 @@
 @media(max-width:720px){.leaflet-top.leaflet-right{top:85px;right:10px}.forecast-values{font-size:8px;gap:10px}}
 
 .checkpoint-list{font-size:10px;margin:0 0 20px;color:#637b57}.checkpoint-list summary{cursor:pointer;padding:8px 0}.checkpoint-list button{display:flex;justify-content:space-between;width:100%;background:#f7f9f3;border:1px solid #e1e8d9;border-radius:4px;margin:4px 0;padding:8px;text-align:left}
+
+.bottom-bar a{color:inherit;text-decoration:underline;text-underline-offset:2px}

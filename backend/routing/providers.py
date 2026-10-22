@@ -25,12 +25,27 @@ def get_json(url,params,kind="weather",ttl=600):
                 _last[kind] = time.monotonic()
                 response = httpx.get(url,params=params,timeout=25,headers={"User-Agent":settings.PROVIDER_USER_AGENT})
         else:
-            response = httpx.get(url,params=params,timeout=35,headers={"User-Agent":settings.PROVIDER_USER_AGENT})
+            response = httpx.get(url,params=params,timeout=12 if kind == "weatherapi" else 35,headers={"User-Agent":settings.PROVIDER_USER_AGENT})
         response.raise_for_status()
         result = response.json()
     except httpx.HTTPStatusError as exc:
         status = exc.response.status_code
         logger.warning("%s provider returned HTTP %s", kind, status)
+        if kind == "weatherapi":
+            try:
+                code = exc.response.json().get("error", {}).get("code")
+            except (ValueError, AttributeError):
+                code = None
+            messages = {
+                1002: "WeatherAPI key is missing. Set WEATHERAPI_KEY on the backend.",
+                2006: "WeatherAPI key is invalid. Update WEATHERAPI_KEY on the backend.",
+                2007: "WeatherAPI monthly quota is exhausted. Check your WeatherAPI account usage.",
+                2008: "WeatherAPI key is disabled. Check your WeatherAPI account.",
+                2009: "The WeatherAPI plan does not allow this forecast request.",
+                1006: "WeatherAPI could not find weather for a requested location.",
+            }
+            message = messages.get(code, f"WeatherAPI request failed (HTTP {status}). Check the key and account quota.")
+            raise ProviderError(message) from exc
         if status == 429:
             message = f"{kind.capitalize()} provider rate limit reached (HTTP 429). Shared hosting IPs may share the provider quota. Wait for the quota to reset or configure dedicated provider access."
         elif status in (401, 403):

@@ -17,7 +17,7 @@ npm run dev
 ```
 Open http://127.0.0.1:5173. Search each location explicitly using its search button or Enter, then select a result. Enter departure time, pounds and checkpoint interval. Submit; select routes and checkpoint markers; explore corridor forecast hours.
 
-No API keys are required for the configured assessment providers. No runtime fixtures or mock forecasts are used.
+Open-Meteo is available without a key. For the hosted deployment, WeatherAPI can be enabled with a server-side key to avoid the observed Open-Meteo shared-IP quota issue. No runtime fixtures or mock forecasts are used.
 
 ## Configuration
 Copy the complete root .env.example. Django loads root .env; DEBUG=true is for local development. Vite proxies /api locally. For deployment set VITE_API_URL in the frontend build environment, since Vite embeds it during build.
@@ -30,7 +30,9 @@ Copy the complete root .env.example. Django loads root .env; DEBUG=true is for l
 | CORS_ALLOWED_ORIGINS | Exact frontend origins, including https://, without trailing slash |
 | VITE_API_URL | Backend public origin, e.g. https://your-api.onrender.com; empty locally |
 | OSRM_URL | Routing service base URL |
-| WEATHER_URL | Open-Meteo forecast endpoint |
+| WEATHER_URL | Open-Meteo forecast endpoint (only used in Open-Meteo mode) |
+| WEATHERAPI_KEY | Backend-only WeatherAPI.com key; automatically selects WeatherAPI when set |
+| WEATHER_PROVIDER | Optional explicit selection: weatherapi or open_meteo |
 | GEOCODER_URL | Nominatim-compatible search endpoint |
 | PROVIDER_USER_AGENT | Identify this application; add your project URL/contact for public services |
 
@@ -90,7 +92,7 @@ The repository includes a two-service render.yaml: Django/Gunicorn web service a
 The API uses one Gunicorn worker with four threads and a 240-second timeout to allow bounded weather batches. This preserves public-provider rate limiting within one service instance. Persistent trips and multi-instance scaling would require shared storage/rate limiting.
 
 ## Submission
-Use docs/WALKTHROUGH.md for the 5–10 minute Loom recording. Include repository URL, hosted URL, Loom URL and the provider limitation about alternative count. GitHub repository: https://github.com/Avinaash076/TRUCKERS. Deployed frontend: https://truckers-web.onrender.com. Deployed backend: https://truckers-api-1keh.onrender.com. Health, frontend asset configuration and CORS have been verified; production weather retrieval is being diagnosed separately. Loom recording remains a user deliverable.
+Use docs/WALKTHROUGH.md for the 5–10 minute Loom recording. Include repository URL, hosted URL, Loom URL and the provider limitation about alternative count. GitHub repository: https://github.com/Avinaash076/TRUCKERS. Deployed frontend: https://truckers-web.onrender.com. Deployed backend: https://truckers-api-1keh.onrender.com. Health, frontend asset configuration and CORS have been verified; production Open-Meteo requests were confirmed to receive HTTP 429 from Render. WeatherAPI integration is available; authenticated live forecasts require WEATHERAPI_KEY in Render. Loom recording remains a user deliverable.
 
 
 ## Weather errors on hosted deployments
@@ -100,3 +102,20 @@ A 502 response from /api/v1/corridor/ can mean the backend received an error fro
 - HTTP 400: check provider endpoint and forecast parameters.
 - Timeout/connection failures: retry later and inspect Render logs.
 The backend logs provider names and statuses without request URLs or secrets. Corridor forecasts request three calendar days, which cover the current forecast hour through +48h. Trip ETA weather retains the 16-day request and actual-horizon checks.
+
+
+## Enable WeatherAPI on Render
+1. In Render open **truckers-api > Environment > Add Environment Variable**.
+2. Set **WEATHERAPI_KEY** to your own key from WeatherAPI.com.
+3. Set **WEATHER_PROVIDER** to **weatherapi**.
+4. Choose **Save, rebuild, and deploy** (or save and deploy the latest commit).
+5. Open https://truckers-api-1keh.onrender.com/api/v1/health/ and confirm weather_provider.id is weatherapi.
+6. On https://truckers-web.onrender.com plan a trip departing soon and inspect checkpoint weather and the corridor slider.
+
+Keep VITE_API_URL and CORS_ALLOWED_ORIGINS unchanged. WEATHER_URL belongs to the optional Open-Meteo adapter and is ignored in WeatherAPI mode. Store the key only in the backend environment, never in a VITE_ variable, GitHub, or frontend code.
+
+WeatherAPI free accounts provide three calendar days of hourly forecasts. Requests use one call per unique location, up to six simultaneous calls, a 90-second total retrieval budget, and a 15-minute per-location cache. Bulk requests are not used. Missing values and hours beyond actual returned coverage remain unknown, and affected routes remain ineligible.
+
+WeatherAPI time_epoch defines the beginning of an hourly forecast period; its wind_mph is the hourly maximum, so it is used directly without interpolation. precip_mm is total precipitation, not separately reported liquid rainfall. The adapter conservatively applies rain thresholds to total precipitation, converts snowfall cm to inches, and exposes this interpretation in warnings and risk reasons. WeatherAPI attribution appears in the frontend after a trip assessment.
+
+The existing deterministic tests use test-only keys and responses. A real WeatherAPI live check cannot be claimed until your key is configured in Render. Provider reference: https://www.weatherapi.com/docs/forecast-api/

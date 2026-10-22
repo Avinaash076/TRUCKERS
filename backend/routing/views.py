@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from . import providers,weather
 from .checkpoints import checkpoints
 from .corridor import grid
-from .risk import classify,summarize,recommend
+from .risk import from_weather,summarize,recommend
 
 class Point(serializers.ListField):
     def __init__(self,**kwargs):
@@ -47,7 +47,7 @@ class Trip(LoadSerializer):
 
 @api_view(["GET"])
 def health(request):
-    return Response({"status":"ok","version":1})
+    return Response({"status":"ok","version":1,"weather_provider":weather.provider_info()})
 
 @api_view(["GET"])
 def geocode(request):
@@ -65,6 +65,9 @@ def assess(request):
     if not serializer.is_valid():
         return Response({"error":"Check the trip inputs.","fields":serializer.errors},status=400)
     data,warnings = serializer.validated_data,[]
+    info = weather.provider_info()
+    if info["notice"]:
+        warnings.append(info["notice"])
     try:
         routes = providers.routes(data["origin"],data["destination"])
         for route in routes:
@@ -80,14 +83,14 @@ def assess(request):
             for checkpoint in route["checkpoints"]:
                 w = weather.at(series,checkpoint["coordinate"],datetime.fromisoformat(checkpoint["eta"]))
                 checkpoint["weather"] = w
-                checkpoint["risk"] = classify(w["wind_mph"],w["rain_in_hr"],w["snow_in_hr"],data["load_lb"]) if w else None
+                checkpoint["risk"] = from_weather(w,data["load_lb"]) if w else None
             summarize(route)
         if len(routes) < 3:
             warnings.append(f"Provider returned {len(routes)} distinct route(s). Three alternatives are not available for every journey.")
         if any(r["unknown_miles"] for r in routes):
             warnings.append("Some checkpoint weather is unavailable. Incomplete routes cannot be recommended.")
         winner = recommend(routes)
-        return Response({"routes":routes,"recommended_id":winner,"warnings":warnings,"ranking_rule":"Severe miles, High miles, distance-weighted average risk, duration","assessed_at":datetime.now(timezone.utc).isoformat()})
+        return Response({"weather_provider":info,"routes":routes,"recommended_id":winner,"warnings":warnings,"ranking_rule":"Severe miles, High miles, distance-weighted average risk, duration","assessed_at":datetime.now(timezone.utc).isoformat()})
     except providers.ProviderError as exc:
         return Response({"error":str(exc)},status=502)
     except (KeyError,ValueError,TypeError,IndexError):
@@ -112,8 +115,8 @@ def corridor(request):
             hours = []
             for h in range(49):
                 w = weather.at(series,point,anchor+timedelta(hours=h))
-                hours.append({"weather":w,"risk":classify(w["wind_mph"],w["rain_in_hr"],w["snow_in_hr"],data["load_lb"])} if w else None)
+                hours.append({"weather":w,"risk":from_weather(w,data["load_lb"])} if w else None)
             samples.append({"coordinate":point,"hours":hours})
-        return Response({"anchor":anchor.isoformat(),"radius_m":radius,"samples":samples})
+        return Response({"weather_provider":weather.provider_info(),"anchor":anchor.isoformat(),"radius_m":radius,"samples":samples})
     except providers.ProviderError as exc:
         return Response({"error":str(exc)},status=502)
