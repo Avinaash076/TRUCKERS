@@ -75,7 +75,7 @@ def geocode(query):
 def _request_routes(points, alternatives):
     coordinates = ";".join(",".join(str(v) for v in point) for point in points)
     return get_json(f"{settings.OSRM_URL}/route/v1/driving/{coordinates}", {
-        "alternatives": "3" if alternatives else "false",
+        "alternatives": "true" if alternatives else "false",
         "overview": "full", "geometries": "geojson",
         "annotations": "distance,duration", "steps": "false",
     }, "osrm")

@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Truck, ArrowRight, ArrowUpRight, Layers, Wind, CloudRain, Snowflake, Route as RouteIcon, ShieldCheck, Clock, ChevronRight, LocateFixed } from 'lucide-react'
+import { Truck, ArrowRight, ArrowUpRight, Layers, Wind, CloudRain, Snowflake, Route as RouteIcon, ShieldCheck, Clock, ChevronRight } from 'lucide-react'
 import PlaceSearch from './PlaceSearch'
 import MapView from './MapView'
 import { api } from './api'
@@ -57,7 +57,7 @@ export default function App() {
     const forecast = corridor ? new Date(new Date(corridor.anchor).getTime() + hour * 3600000).toISOString() : null
     const worst = corridor?.samples.reduce((max, s) => Math.max(max, s.hours[hour]?.risk.score ?? -1), -1) ?? -1
     return <div className="app">
-        <header className="topbar"><a href="/" className="brand"><span className="brand-icon"><Truck size={22} /></span>weather<span>haul</span></a><span className="nav-label">ROUTE INTELLIGENCE</span><div className="top-meta"><span className="status-dot" />Live weather routing<span className="version">ASSESSMENT / V1.0</span></div></header>
+        <header className="topbar"><a href="/" className="brand"><span className="brand-icon"><Truck size={22} /></span>weather<span>haul</span></a><span className="nav-label">ROUTE INTELLIGENCE</span></header>
         <main className="workspace">
             <aside className="sidebar"><div className="sidebar-heading"><span className="eyebrow">PLAN WITH CONFIDENCE</span><h1>A clearer road ahead.</h1><p>Compare routes with the weather<br />your truck will actually meet.</p></div>
                 <form onSubmit={e => void plan(e)}><div className="section-label"><span>01</span>Trip details</div>
@@ -94,7 +94,6 @@ export default function App() {
             <section className="map-section" aria-label="Route map and forecasts">
                 <MapView data={data} selected={selected} onSelect={chooseRoute} onCheckpoint={setCheckpoint} corridor={corridor} hour={hour} showHeat={showHeat} />
                 <div className="map-top"><div className="map-title"><span className="eyebrow">JOURNEY OVERVIEW</span><h2>{tripLabel || 'Every mile. In perspective.'}</h2><p>{data ? 'Arrival-time checkpoint assessment · ' + assessedLoad.toLocaleString() + ' lb load' : 'Plan a trip to reveal routes and weather ahead.'}</p></div><button type="button" className={'layer-button ' + (showHeat ? 'active' : '')} disabled={!corridor} onClick={() => setShowHeat(!showHeat)} aria-pressed={showHeat}><Layers size={16} />Weather layer</button></div>
-                {!data && !busy && <div className="map-empty"><span className="map-empty-icon"><LocateFixed size={26} /></span><h3>The journey starts here.</h3><p>Set your origin and destination to compare<br />weather along the road ahead.</p><span>REAL ROUTES · ARRIVAL-TIME FORECASTS</span></div>}
                 {busy && !data && <div className="map-loading" role="status"><span className="spinner" />Finding distinct road routes...</div>}
                 {checkpoint && <div className="checkpoint-panel"><button className="close" type="button" onClick={() => setCheckpoint(null)} aria-label="Close checkpoint">×</button><span className="eyebrow">ARRIVAL-TIME CHECKPOINT</span><h3>Mile {checkpoint.mile.toFixed(1)} <span style={{ color: checkpoint.risk ? colors[checkpoint.risk.score] : '#777' }}>{checkpoint.risk?.label || 'Unknown'}</span></h3><p>{time(checkpoint.eta)}</p><div className="weather-values"><span><Wind size={16} />{checkpoint.weather?.wind_mph.toFixed(1) ?? '—'} mph</span><span><CloudRain size={16} />{checkpoint.weather?.rain_in_hr.toFixed(3) ?? '—'} in/hr</span><span><Snowflake size={16} />{checkpoint.weather?.snow_in_hr.toFixed(3) ?? '—'} in/hr</span></div><p>{checkpoint.risk?.reasons.join(' · ') || 'Weather unavailable; route cannot be recommended.'}</p></div>}
                 <div className="map-bottom"><div className="legend"><span>WEATHER RISK</span>{labels.map((label, i) => <span key={label}><i style={{ background: colors[i] }} />{label}</span>)}<span><i style={{ background: '#87939b' }} />Unknown</span></div>
