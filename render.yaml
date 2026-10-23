@@ -17,6 +17,8 @@ services:
         sync: false
       - key: PROVIDER_USER_AGENT
         value: WeatherHaul-assessment/1.0
+      - key: GEOCODER_URL
+        value: https://nominatim.qgis.org/search
   - type: web
     name: weatherhaul
     runtime: static
