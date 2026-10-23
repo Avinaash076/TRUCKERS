@@ -40,6 +40,30 @@ test('recorded live provider data renders real geometries and a changing forecas
  expect(forecastBox!.width).toBeLessThanOrEqual(620)
  expect(forecastBox!.height).toBeLessThan(195)
  await page.screenshot({path:path.join(output,'compact-desktop.png'),fullPage:true})
+ // Click an actual Canvas checkpoint, then check clearance from both zoom buttons.
+ const project=([lon,lat]:number[])=>[256*(lon+180)/360,128*(1-Math.log(Math.tan(Math.PI/4+lat*Math.PI/360))/Math.PI)]
+ const mapBox=(await page.locator('.route-map').boundingBox())!
+ const points=assessment.routes.flatMap((r:any)=>r.geometry.map(project)) as number[][]
+ const xs=points.map(p=>p[0]),ys=points.map(p=>p[1])
+ const xMin=Math.min(...xs),xMax=Math.max(...xs),yMin=Math.min(...ys),yMax=Math.max(...ys)
+ const scale=2**Math.min(18,Math.floor(Math.log2(Math.min((mapBox.width-48)/(xMax-xMin),(mapBox.height-300)/(yMax-yMin)))))
+ const checkpoints=assessment.routes[0].checkpoints
+ const point=project(checkpoints[Math.floor(checkpoints.length/2)].coordinate)
+ await page.waitForTimeout(600)
+ await page.mouse.click(mapBox.x+mapBox.width/2+(point[0]-(xMin+xMax)/2)*scale,mapBox.y+mapBox.height/2+(point[1]-(yMin+yMax)/2)*scale-30)
+ await expect(page.locator('.checkpoint-panel')).toBeVisible()
+ const expectClearControls=async()=>{
+  const card=(await page.locator('.checkpoint-panel').boundingBox())!
+  const zoom=(await page.locator('.leaflet-control-zoom').boundingBox())!
+  expect(card.x+card.width+12).toBeLessThanOrEqual(zoom.x)
+ }
+ await expectClearControls()
+ await page.screenshot({path:path.join(output,'checkpoint-controls-desktop.png'),fullPage:true})
+ await page.setViewportSize({width:390,height:844})
+ await expectClearControls()
+ await page.screenshot({path:path.join(output,'checkpoint-controls-mobile.png'),fullPage:true})
+ await page.getByRole('button',{name:'Close checkpoint'}).click()
+ await page.setViewportSize({width:1280,height:720})
  await page.getByRole('button',{name:'Weather layer'}).click()
  await expect(page.getByRole('button',{name:'Weather layer'})).toHaveAttribute('aria-pressed','false')
  await page.getByRole('button',{name:/Route B/}).click()

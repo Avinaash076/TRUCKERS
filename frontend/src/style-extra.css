@@ -113,7 +113,7 @@
 .route-weather-status .spinner{width:11px;height:11px}
 .route-card.selected{border-color:#7e9f6b;box-shadow:inset 3px 0 var(--route-color),0 2px 7px #254b3c0a}
 .bottom-bar a{color:inherit}
-.checkpoint-panel{top:calc(var(--map-zoom-top) + 92px)}
+.checkpoint-panel{top:calc(var(--map-zoom-top) + 50px);right:80px;width:min(340px,calc(100% - 100px))}
 .tile-warning{top:130px}
 .map-bottom{left:20px;right:auto;bottom:20px;width:min(620px,calc(100% - 40px))}
 .map-bottom .legend{width:100%;padding:9px 13px;gap:8px 12px;margin-bottom:9px}
@@ -132,5 +132,6 @@
  .map-bottom .legend{gap:7px 10px;padding:7px 10px}
  .map-bottom .legend>span:first-child{width:auto}
  .map-bottom .timeline{padding:14px 15px 11px}
- .checkpoint-panel{top:calc(var(--map-zoom-top) + 92px);max-width:340px}
+ .checkpoint-panel{right:70px;width:calc(100% - 90px);max-width:340px;padding:16px}
+ .checkpoint-panel .weather-values{flex-wrap:wrap;gap:10px}
 }
