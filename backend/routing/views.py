@@ -59,6 +59,40 @@ def geocode(request):
     except providers.ProviderError as exc:
         return Response({"error":str(exc)},status=502)
 
+def trip_routes(data):
+    routes = providers.routes(data["origin"],data["destination"])
+    for route in routes:
+        if route["distance_miles"]>5000:
+            raise serializers.ValidationError({"error":"Choose a road journey under 5,000 miles."})
+        route["checkpoints"] = checkpoints(route["geometry"],route.pop("distances"),route.pop("durations"),data["interval_miles"],data["departure"])
+    return routes
+
+
+def route_warnings(routes):
+    warnings = []
+    if len(routes)<3:
+        warnings.append(f"Found {len(routes)} distinct reasonable road route(s). This road network may not offer three alternatives.")
+    return warnings
+
+
+@api_view(["POST"])
+def preview(request):
+    serializer = Trip(data=request.data)
+    if not serializer.is_valid():
+        return Response({"error":"Check the trip inputs.","fields":serializer.errors},status=400)
+    try:
+        routes = trip_routes(serializer.validated_data)
+        for route in routes:
+            summarize(route)
+        return Response({"routes":routes,"recommended_id":None,"warnings":route_warnings(routes),
+                         "assessment_status":"pending","weather_provider":weather.provider_info(),
+                         "ranking_rule":"Weather assessment pending","assessed_at":None})
+    except providers.ProviderError as exc:
+        return Response({"error":str(exc)},status=502)
+    except (KeyError,ValueError,TypeError,IndexError):
+        return Response({"error":"Routing provider returned unsupported segment data."},status=502)
+
+
 @api_view(["POST"])
 def assess(request):
     serializer = Trip(data=request.data)
@@ -69,11 +103,7 @@ def assess(request):
     if info["notice"]:
         warnings.append(info["notice"])
     try:
-        routes = providers.routes(data["origin"],data["destination"])
-        for route in routes:
-            if route["distance_miles"] > 5000:
-                return Response({"error":"Choose a road journey under 5,000 miles."},status=400)
-            route["checkpoints"] = checkpoints(route["geometry"],route.pop("distances"),route.pop("durations"),data["interval_miles"],data["departure"])
+        routes = trip_routes(data)
         try:
             series = weather.fetch([c["coordinate"] for r in routes for c in r["checkpoints"]])
         except providers.ProviderError as exc:
@@ -85,12 +115,11 @@ def assess(request):
                 checkpoint["weather"] = w
                 checkpoint["risk"] = from_weather(w,data["load_lb"]) if w else None
             summarize(route)
-        if len(routes) < 3:
-            warnings.append(f"Provider returned {len(routes)} distinct route(s). Three alternatives are not available for every journey.")
+        warnings.extend(route_warnings(routes))
         if any(r["unknown_miles"] for r in routes):
             warnings.append("Some checkpoint weather is unavailable. Incomplete routes cannot be recommended.")
         winner = recommend(routes)
-        return Response({"weather_provider":info,"routes":routes,"recommended_id":winner,"warnings":warnings,"ranking_rule":"Severe miles, High miles, distance-weighted average risk, duration","assessed_at":datetime.now(timezone.utc).isoformat()})
+        return Response({"assessment_status":"complete","weather_provider":info,"routes":routes,"recommended_id":winner,"warnings":warnings,"ranking_rule":"Severe miles, High miles, distance-weighted average risk, duration","assessed_at":datetime.now(timezone.utc).isoformat()})
     except providers.ProviderError as exc:
         return Response({"error":str(exc)},status=502)
     except (KeyError,ValueError,TypeError,IndexError):

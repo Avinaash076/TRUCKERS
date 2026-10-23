@@ -5,7 +5,7 @@ Source: fs-assessment-spotter.pdf (2 pages). The assignment requirements govern 
 |---|---|---|
 | React + Django | Vite/TypeScript frontend, Django REST endpoints | Production build, Django checks, browser test |
 | Origin, destination, departure, load | Selected geocoded coordinates; offset-aware time; pounds | API validation and browser workflow |
-| Three real route options | OSRM alternatives, unique geometry; explicit shortage state | Live provider smoke, duplicate-removal test, three comparison slots |
+| Three real route options | OSRM native and bounded waypoint alternatives; geometry/detour checks; explicit shortage state | Live provider smoke, duplicate-removal test, three comparison slots |
 | Weather every 10 / 25 / 50 miles | Cumulative route annotations and interpolation | Curved geometry and spacing tests |
 | Checkpoint arrival-time weather | Segment duration ETAs; hourly forecast matching | Timezone, interval, units and horizon tests |
 | Exact weather and load risk rules | Central backend risk module; highest applicable risk | Boundary subtests for all thresholds |

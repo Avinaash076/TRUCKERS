@@ -1,13 +1,134 @@
 /* Layout and weather canvas refinements. */
-.weather-canvas{position:absolute;pointer-events:none}
-.tile-warning{position:absolute;z-index:500;left:20px;top:195px;background:#fff8e9;border:1px solid #eddfc1;color:#8a6b39;padding:8px;border-radius:5px;font-size:10px}
-.leaflet-top.leaflet-right{top:80px;right:15px}
-.leaflet-control-zoom a{font-weight:400!important;color:#466044!important}
-.forecast-values{display:flex;gap:14px;font-size:9px;color:#6b7d62;margin-top:10px}
-.forecast-values>span{display:flex;align-items:center;gap:4px}
-@media(min-width:721px){body{height:100dvh;overflow:hidden}.workspace{height:calc(100dvh - 107px);min-height:0}.sidebar{overflow-y:auto;scrollbar-width:thin}.map-section{height:100%;min-height:0}.map-empty{top:43%;padding:20px 25px}.map-bottom{bottom:25px}.map-title h2{font-size:18px}.timeline{padding:14px 19px 10px}.timeline-heading{margin-bottom:12px}.timeline p{margin-top:10px;padding-top:9px}}
-@media(max-width:720px){.leaflet-top.leaflet-right{top:85px;right:10px}.forecast-values{font-size:8px;gap:10px}}
+.weather-canvas {
+    position: absolute;
+    pointer-events: none
+}
 
-.checkpoint-list{font-size:10px;margin:0 0 20px;color:#637b57}.checkpoint-list summary{cursor:pointer;padding:8px 0}.checkpoint-list button{display:flex;justify-content:space-between;width:100%;background:#f7f9f3;border:1px solid #e1e8d9;border-radius:4px;margin:4px 0;padding:8px;text-align:left}
+.tile-warning {
+    position: absolute;
+    z-index: 500;
+    left: 20px;
+    top: 195px;
+    background: #fff8e9;
+    border: 1px solid #eddfc1;
+    color: #8a6b39;
+    padding: 8px;
+    border-radius: 5px;
+    font-size: 10px
+}
 
-.bottom-bar a{color:inherit;text-decoration:underline;text-underline-offset:2px}
+.leaflet-top.leaflet-right {
+    top: 80px;
+    right: 15px
+}
+
+.leaflet-control-zoom a {
+    font-weight: 400 !important;
+    color: #466044 !important
+}
+
+.forecast-values {
+    display: flex;
+    gap: 14px;
+    font-size: 9px;
+    color: #6b7d62;
+    margin-top: 10px
+}
+
+.forecast-values>span {
+    display: flex;
+    align-items: center;
+    gap: 4px
+}
+
+@media(min-width:721px) {
+    body {
+        height: 100dvh;
+        overflow: hidden
+    }
+
+    .workspace {
+        height: calc(100dvh - 107px);
+        min-height: 0
+    }
+
+    .sidebar {
+        overflow-y: auto;
+        scrollbar-width: thin
+    }
+
+    .map-section {
+        height: 100%;
+        min-height: 0
+    }
+
+    .map-empty {
+        top: 43%;
+        padding: 20px 25px
+    }
+
+    .map-bottom {
+        bottom: 25px
+    }
+
+    .map-title h2 {
+        font-size: 18px
+    }
+
+    .timeline {
+        padding: 14px 19px 10px
+    }
+
+    .timeline-heading {
+        margin-bottom: 12px
+    }
+
+    .timeline p {
+        margin-top: 10px;
+        padding-top: 9px
+    }
+}
+
+@media(max-width:720px) {
+    .leaflet-top.leaflet-right {
+        top: 85px;
+        right: 10px
+    }
+
+    .forecast-values {
+        font-size: 8px;
+        gap: 10px
+    }
+}
+
+/* Route details live with their selector; keep the map clear. */
+.route-arrival{display:flex;align-items:center;gap:8px;border-top:1px solid #e4eadf;padding-top:9px;margin:8px 0 10px;color:#59704e}
+.route-arrival>div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.route-arrival span{font-size:8px;text-transform:uppercase;letter-spacing:.7px;color:#849278}
+.route-arrival time{font-size:10px;font-weight:600;line-height:1.4;overflow-wrap:anywhere}
+.route-via{display:block;font-size:8px;color:#829073;margin:-1px 0 9px}
+.route-weather-status{display:flex;align-items:center;gap:6px;font-size:9px;color:#7c8d71;min-height:26px}
+.route-weather-status .spinner{width:11px;height:11px}
+.route-card.selected{border-color:#7e9f6b;box-shadow:inset 3px 0 var(--route-color),0 2px 7px #254b3c0a}
+.bottom-bar a{color:inherit}
+.checkpoint-panel{top:145px}
+.tile-warning{top:130px}
+.map-bottom{left:20px;right:auto;bottom:20px;width:min(520px,calc(100% - 40px))}
+.map-bottom .legend{width:100%;padding:8px 11px;gap:8px 11px;margin-bottom:8px}
+.map-bottom .legend>span{font-size:8px}
+.map-bottom .legend>span:first-child{font-size:7px;letter-spacing:.6px}
+.map-bottom .timeline{padding:12px 15px 10px;border-radius:8px}
+.map-bottom .timeline-heading{margin-bottom:10px;gap:10px}
+.map-bottom .timeline-heading .eyebrow{font-size:8px;letter-spacing:1.2px}
+.map-bottom .timeline h3{font-size:12px;margin-top:4px;line-height:1.4}
+.map-bottom .forecast-badge{font-size:8px;padding:5px 7px;white-space:nowrap}
+.map-bottom .timeline input{height:4px;margin:3px 0}
+.map-bottom .timeline-ticks{font-size:8px;margin-top:8px}
+.map-bottom .timeline p{font-size:8px;line-height:1.5;margin-top:8px;padding-top:8px}
+@media(max-width:720px){
+ .map-bottom{left:12px;bottom:22px;width:calc(100% - 24px)}
+ .map-bottom .legend{gap:7px 10px;padding:7px 10px}
+ .map-bottom .legend>span:first-child{width:auto}
+ .map-bottom .timeline{padding:11px 13px 9px}
+ .checkpoint-panel{top:145px;max-width:340px}
+}

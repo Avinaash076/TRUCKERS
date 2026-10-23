@@ -15,3 +15,9 @@ Response: routes[], recommended_id (nullable), warnings[], ranking_rule, assesse
 Response: anchor (UTC forecast hour), radius_m, samples[]. Each sample contains coordinate and hours[0..48]. Frames contain weather and risk, or null if unavailable. This endpoint does not change trip ETAs.
 
 HTTP 400: invalid inputs. HTTP 502: unavailable/malformed upstream provider. Weather failure during assessment may return HTTP 200 with real routes, explicit warnings and unknown weather; affected routes are ineligible. This allows honest map inspection during weather outages.
+
+
+### Route preview and alternative metadata
+POST /api/v1/routes/ uses the assessment request schema and returns assessment_status=pending, routes with checkpoint ETAs, recommended_id=null, and warnings. Weather/risk are unknown during this phase; the frontend must not show zero-risk metrics as if assessed. POST /assess/ returns assessment_status=complete.
+
+Each route may include route_kind (provider_alternative or via_waypoint) and via_coordinate. Waypoint routes are requested from OSRM on real roads and accepted only when distinct and within detour/backtracking limits. The native routes are preserved if optional route searches fail. Route sets are cached for ten minutes and returned as independent copies to preserve annotations across requests.

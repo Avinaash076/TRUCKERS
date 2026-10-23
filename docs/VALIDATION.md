@@ -40,3 +40,15 @@
 - Precipitation interpretation is explicit: WeatherAPI total precipitation is a conservative bound for the rain rule; it is not presented as separately measured liquid rainfall.
 
 - Production frontend build and recorded-data Edge browser workflow passed after the WeatherAPI integration; real-key verification is still pending Render configuration.
+
+
+## Route and layout update ? 23 October 2026
+- Backend suite expanded to 51 passing tests, including native/waypoint alternative counts, duplicate and same-road rejection, dead-end/excessive-detour rejection, cached annotation integrity and preview validation/ETAs.
+- Seven frontend tests passed, covering early ETAs, honest pending risk, independent corridor loading, retained route selection, errors, slider updates and duration formatting.
+- Production frontend build passed.
+- Edge browser check passed for three actual recorded road routes, arrival times in route cards, removal of the map-wide selected-route bar, forecast hours 0/24/48 and mobile overflow.
+- Desktop timeline width was constrained to at most 540px and height below 165px; mobile timeline fit 390px width and stayed below 195px. Desktop/mobile screenshots were visually reviewed.
+- Actual routing API checks: New York-Boston returned 3 routes (~214, 232, 228 miles); Chicago-Detroit returned 3 (~282, 299, 310 miles); Ohio-Texas returned 3 (~1251, 1255, 1299 miles).
+- Ohio-Texas route retrieval took approximately 4 seconds in the checked request. Routing latency varies with providers and cache state; weather loading is separate.
+- Live local assessment and corridor checks passed with actual Open-Meteo data: three distinct routes with complete checkpoint weather, and 76 corridor samples with 49 hours each. No local WeatherAPI secret was used.
+- Pre-existing local HTML formatting and UI edits were preserved; original copies are stored under ignored .cache/ui-request-baseline/.

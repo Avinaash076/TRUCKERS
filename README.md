@@ -50,7 +50,7 @@ Copy the complete root .env.example. Django loads root .env; DEBUG=true is for l
 - See docs/API.md for request/response contracts and docs/REQUIREMENTS.md for traceability.
 
 ## Providers and limits
-[OSRM API](https://project-osrm.org/docs/v5.24.0/api/) and [demo policy](https://github.com/Project-OSRM/osrm-backend/wiki/Demo-server): request three genuine alternatives, deduplicate geometry, and display an explicit shortfall. **The public service returned at most two routes in the journeys verified here. The three-genuine-route acceptance item remains unverified.** No route is copied to fill a slot. The routing adapter can use another compatible OSRM endpoint through configuration.
+[OSRM API](https://project-osrm.org/docs/v5.24.0/api/) and [demo policy](https://github.com/Project-OSRM/osrm-backend/wiki/Demo-server): request three genuine alternatives, deduplicate geometry, and display an explicit shortfall. When fewer than three native alternatives are available, a bounded search requests real road routes through alternate corridor waypoints. Geometry overlap, detour distance/time and out-and-back checks reject duplicate or unreasonable options. Additional routes are labeled in the interface. Three distinct routes were verified for New York-Boston, Chicago-Detroit and Ohio-Texas. A sparse road network can still yield fewer than three; no route is copied to fill a slot. The routing adapter can use another compatible OSRM endpoint through configuration.
 
 [Open-Meteo](https://open-meteo.com/en/docs): hourly forecasts up to 16 days, with actual availability checked at each ETA. Unknown or missing weather makes a route ineligible. Arrival beyond the available horizon is never filled with invented weather.
 
@@ -119,3 +119,9 @@ WeatherAPI free accounts provide three calendar days of hourly forecasts. Reques
 WeatherAPI time_epoch defines the beginning of an hourly forecast period; its wind_mph is the hourly maximum, so it is used directly without interpolation. precip_mm is total precipitation, not separately reported liquid rainfall. The adapter conservatively applies rain thresholds to total precipitation, converts snowfall cm to inches, and exposes this interpretation in warnings and risk reasons. WeatherAPI attribution appears in the frontend after a trip assessment.
 
 The existing deterministic tests use test-only keys and responses. A real WeatherAPI live check cannot be claimed until your key is configured in Render. Provider reference: https://www.weatherapi.com/docs/forecast-api/
+
+
+## Route previews and compact map controls
+POST /api/v1/routes/ accepts the same trip input as /assess/ and returns real geometry, checkpoints and ETAs with assessment_status=pending. No pending route is recommended or labeled low risk. The frontend shows this preview immediately, then fetches checkpoint assessment and corridor forecasts independently. Cached road routes are reused by the assessment, and obsolete responses cannot overwrite a newer trip.
+
+Arrival times are displayed in each sidebar route card. The full-width selected-route map bar has been removed. The forecast control is capped at 520px on desktop and fits the available width on mobile; it still includes all 49 hourly frames. Map road layers are memoized so slider changes update the heatmap without rebuilding route polylines.
