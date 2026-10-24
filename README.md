@@ -91,10 +91,6 @@ The repository includes a two-service render.yaml: Django/Gunicorn web service a
 
 The API uses one Gunicorn worker with four threads and a 240-second timeout to allow bounded weather batches. This preserves public-provider rate limiting within one service instance. Persistent trips and multi-instance scaling would require shared storage/rate limiting.
 
-## Submission
-Use docs/WALKTHROUGH.md for the 5–10 minute Loom recording. Include repository URL, hosted URL, Loom URL and the provider limitation about alternative count. GitHub repository: https://github.com/Avinaash076/TRUCKERS. Deployed frontend: https://truckers-web.onrender.com. Deployed backend: https://truckers-api-1keh.onrender.com. Health, frontend asset configuration and CORS have been verified; production Open-Meteo requests were confirmed to receive HTTP 429 from Render. WeatherAPI integration is available; authenticated live forecasts require WEATHERAPI_KEY in Render. Loom recording remains a user deliverable.
-
-
 ## Weather errors on hosted deployments
 A 502 response from /api/v1/corridor/ can mean the backend received an error from the weather provider. Check its JSON error message, rather than changing the frontend API URL or CORS without evidence.
 - HTTP 429: provider quota/rate limit. Open-Meteo documents shared-IP limits for Render: https://open-meteo.com/en/terms. Wait for reset or arrange dedicated provider access; restarting your app does not guarantee a new quota.
